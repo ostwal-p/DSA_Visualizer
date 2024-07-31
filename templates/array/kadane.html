@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Kadane's Algorithm Visualization</title>
+	<style>
+		html, * {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		body {
+			font-family: Arial, sans-serif;
+			text-align: center;
+			background-color: #f0f0f0;
+			color: #333;
+		}
+
+		.container {
+			width: 80%;
+			margin: auto;
+		}
+
+		h1, h2 {
+			margin: 20px 0;
+		}
+
+		.grid {
+			background: #e0f7fa;
+			margin: 20px auto;
+			border: 1px solid #00796b;
+		}
+
+		p {
+			padding: 10px 20px;
+			font-size: 18px;
+			color: #00796b;
+		}
+
+		.kadane, .refresh {
+			padding: 10px 30px;
+			margin: 20px;
+			background-color: #00796b;
+			color: white;
+			border: none;
+			border-radius: 5px;
+			cursor: pointer;
+			font-size: 16px;
+		}
+
+		.kadane:disabled, .refresh:disabled {
+			background-color: #004d40;
+			cursor: not-allowed;
+		}
+
+		input[type="text"] {
+			padding: 10px;
+			margin: 20px;
+			border: 1px solid #00796b;
+			border-radius: 5px;
+			font-size: 16px;
+		}
+
+		.result {
+			font-size: 20px;
+			color: #00796b;
+			margin: 20px;
+		}
+	</style>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+</head>
+<body>
+	<div class="container">
+		<h1>Kadane's Algorithm Visualization</h1>
+		<p>Kadane's Algorithm is used to find the maximum sum subarray in an array of integers. This visualization helps understand how the algorithm works step-by-step.</p>
+		<input type="text" id="arrayInput" placeholder="Enter comma-separated integers" />
+		<button class="kadane">Find Max Subset Sum</button>
+		<button class="refresh">Refresh</button>
+		<canvas class="grid" width="1000" height="500"></canvas>
+		<p class="result" id="result"></p>
+	</div>
+	<script>
+		// Main
+		let ctx = document.querySelector("canvas").getContext("2d");
+		let arr = [];
+		let size = 10;
+		let time_delay = 1000;
+		let per_width = (ctx.canvas.width - 20) / size;
+		init();
+
+		// Utility
+		function init() {
+			document.querySelector(".kadane").addEventListener("click", () => {
+				let input = document.getElementById('arrayInput').value;
+				if (input) {
+					arr = input.split(',').map(Number);
+					size = arr.length;
+					per_width = (ctx.canvas.width - 20) / size;
+					document.querySelector(".kadane").disabled = true;
+					document.querySelector(".refresh").disabled = false;
+					document.getElementById('result').textContent = "";
+					kadanes(70, "#ff5722", 150);
+				}
+			});
+
+			document.querySelector(".refresh").addEventListener("click", () => {
+				document.querySelector(".kadane").disabled = false;
+				document.querySelector(".refresh").disabled = true;
+				ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+				document.getElementById('arrayInput').value = "";
+				document.getElementById('result').textContent = "";
+				arr = [];
+			});
+
+			document.querySelector(".refresh").disabled = true;
+		}
+
+		function draw_array(height=100, bc="#00796b", index=false, y=10) {
+			let gap = 3;
+			ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+			for(let i=0; i<size; i++) {
+				ctx.fillStyle = bc;
+				ctx.fillRect(i * (per_width - 2) + gap * i + 5, y, per_width, height);
+				ctx.fillStyle = "white";
+				ctx.font = "bolder 25px Arial";
+				ctx.fillText(arr[i], i * (per_width - 2) + gap * i + 5 + per_width / 2 - 10, y + height / 2 + 10);
+			}
+		}
+
+		async function kadanes(height, bc, y) {
+			let gap = 3;
+			let te = [];
+			for(let i=0; i<size; i++) {
+				ctx.fillStyle = bc;
+				ctx.fillRect(i * (per_width - 2) + gap * i + 5, y, per_width, height);
+				ctx.fillStyle = "black";
+				ctx.font = "bolder 20px Arial";
+				ctx.fillText("", i * (per_width - 2) + gap * i + 5 + per_width / 2, y + height / 2);
+			}
+
+			let sum = -Infinity;
+			let t = -Infinity;
+			let pos = 0;
+			for(let i=0; i<size; i++) {
+				await sleep(time_delay).then(() => {
+					ctx.fillStyle = bc;
+					ctx.fillRect(i * (per_width - 2) + gap * i + 5, y, per_width, height);
+					ctx.fillStyle = "yellow";
+					ctx.font = "bolder 24px Arial";
+					sum = Math.max(sum + arr[i], arr[i]);
+					if(t < sum) {
+						t = sum;
+						pos = i;
+					}
+					te.push(sum);
+					ctx.fillText(sum, i * (per_width - 2) + gap * i + 5 + per_width / 2 - 10, y + height / 2 + 10);
+				});
+			}
+
+			i = pos;
+			ctx.fillStyle = "white";
+			ctx.fillRect(i * (per_width - 2) + gap * i + 5, y, per_width, height);
+			ctx.fillStyle = "black";
+			ctx.font = "bolder 25px Arial";
+			ctx.fillText(t, i * (per_width - 2) + gap * i + 5 + per_width / 2 - 10, y + height / 2 + 10);
+
+			let begin = pos;
+			for(i = pos; i >= 0; i--) {
+				if(te[i] === arr[i]) {
+					begin = i;
+					break;
+				}
+			}
+
+			for(let i=0; i<size; i++) {
+				if(i < begin || i > pos) {
+					arr[i] = "";
+				}
+			}
+			draw_array(100, "#00796b", false, 250);
+			document.getElementById('result').textContent = "Maximum Subarray Sum: " + t;
+		}
+
+		function sleep(ms) {
+			return new Promise(resolve => setTimeout(resolve, ms));
+		}
+	</script>
+</body>
+</html>
